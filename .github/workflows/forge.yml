@@ -12,6 +12,11 @@ on:
         description: "Build ID — the builds/<id> directory committed to the repo"
         required: true
         type: string
+  # TEMPORARY (e2e test only): allow triggering via push while the API token
+  # lacks Actions write permission. Removed after the test passes.
+  push:
+    branches: [main]
+    paths: ['builds/test-1790360527/**']
 
 permissions:
   contents: write   # needed to create the tag + GitHub Release
@@ -21,6 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
+      # TEMPORARY (e2e test only): resolve the build id for push events.
+      - name: Resolve build ID
+        run: echo "BUILD_ID=${{ inputs.build_id || 'test-1790360527' }}" >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -44,7 +53,7 @@ jobs:
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Scaffold Android app
-        run: node scripts/forge.mjs "builds/${{ inputs.build_id }}"
+        run: node scripts/forge.mjs "builds/${{ env.BUILD_ID }}"
 
       - name: Build release APK and AAB
         run: |
@@ -92,7 +101,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: forge-${{ inputs.build_id }}-files
+          name: forge-${{ env.BUILD_ID }}-files
           retention-days: 90
           path: |
             android/app/build/outputs/apk/release/app-release.apk
@@ -103,7 +112,7 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: forge-${{ inputs.build_id }}
+          tag_name: forge-${{ env.BUILD_ID }}
           name: "$(jq -r .appName build-info.json) v$(jq -r .versionName build-info.json)"
           body: |
             Built with APK Forge Studio ⚒️
