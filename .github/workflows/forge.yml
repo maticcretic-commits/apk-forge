@@ -82,8 +82,8 @@ jobs:
 
           export APKS_KS_PASS="$SP" APKS_KEY_PASS="$KP"
           "$BT/apksigner" sign \
-            --ks "$KS" --ks-pass:pass "$SP" \
-            --key-pass:pass "$KP" \
+            --ks "$KS" --ks-pass "env:APKS_KS_PASS" \
+            --key-pass "env:APKS_KEY_PASS" \
             --out /tmp/app-signed.apk "$APK"
           mv /tmp/app-signed.apk "$APK"
           echo "APK signed."
