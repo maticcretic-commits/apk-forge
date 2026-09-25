@@ -72,7 +72,10 @@ jobs:
           ALIAS=$(jq -r .keyAlias build-info.json)
           INCLUDE_AAB=$(jq -r .includeAab build-info.json)
           BT="$ANDROID_HOME/build-tools/35.0.0"
-          test -f "$APK" || { echo "APK not found at $APK"; exit 1; }
+          # Gradle names unsigned outputs app-release-unsigned.apk — normalize
+          SRC_APK=$(ls android/app/build/outputs/apk/release/*.apk 2>/dev/null | head -1)
+          test -n "$SRC_APK" || { echo "no APK was produced by the build"; exit 1; }
+          if [ "$SRC_APK" != "$APK" ]; then cp "$SRC_APK" "$APK"; fi
 
           "$BT/zipalign" -p -f 4 "$APK" /tmp/app-aligned.apk
           mv /tmp/app-aligned.apk "$APK"
@@ -86,7 +89,9 @@ jobs:
           echo "APK signed."
 
           if [ "$INCLUDE_AAB" = "true" ]; then
-            test -f "$AAB" || { echo "AAB not found at $AAB"; exit 1; }
+            SRC_AAB=$(ls android/app/build/outputs/bundle/release/*.aab 2>/dev/null | head -1)
+            test -n "$SRC_AAB" || { echo "no AAB was produced by the build"; exit 1; }
+            if [ "$SRC_AAB" != "$AAB" ]; then cp "$SRC_AAB" "$AAB"; fi
             jarsigner -keystore "$KS" -storepass "$SP" -keypass "$KP" "$AAB" "$ALIAS"
             echo "AAB signed."
           else
