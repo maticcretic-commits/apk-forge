@@ -1,0 +1,119 @@
+# APK Forge Studio — cloud build.
+# Triggered from the Pages studio via workflow_dispatch with inputs.build_id.
+# Builds a signed release APK (+ optional AAB) and publishes a public release.
+name: Forge APK
+
+run-name: "Forge ${{ inputs.build_id }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: "Build ID — the builds/<id> directory committed to the repo"
+        required: true
+        type: string
+
+permissions:
+  contents: write   # needed to create the tag + GitHub Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Scaffold Android app
+        run: node scripts/forge.mjs "builds/${{ inputs.build_id }}"
+
+      - name: Build release APK and AAB
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease --no-daemon
+
+      - name: Sign APK and AAB
+        run: |
+          set -e
+          APK=$(jq -r .apkPath build-info.json)
+          AAB=$(jq -r .aabPath build-info.json)
+          KS=$(jq -r .keystorePath build-info.json)
+          SP=$(jq -r .storePass build-info.json)
+          KP=$(jq -r .keyPass build-info.json)
+          ALIAS=$(jq -r .keyAlias build-info.json)
+          INCLUDE_AAB=$(jq -r .includeAab build-info.json)
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          test -f "$APK" || { echo "APK not found at $APK"; exit 1; }
+
+          "$BT/zipalign" -p -f 4 "$APK" /tmp/app-aligned.apk
+          mv /tmp/app-aligned.apk "$APK"
+
+          export APKS_KS_PASS="$SP" APKS_KEY_PASS="$KP"
+          "$BT/apksigner" sign \
+            --ks "$KS" --ks-pass:env APKS_KS_PASS \
+            --key-pass:env APKS_KEY_PASS \
+            --out /tmp/app-signed.apk "$APK"
+          mv /tmp/app-signed.apk "$APK"
+          echo "APK signed."
+
+          if [ "$INCLUDE_AAB" = "true" ]; then
+            test -f "$AAB" || { echo "AAB not found at $AAB"; exit 1; }
+            jarsigner -keystore "$KS" -storepass "$SP" -keypass "$KP" "$AAB" "$ALIAS"
+            echo "AAB signed."
+          else
+            echo "Skipping AAB (includeAab=false)."
+          fi
+
+      - name: Verify APK signature
+        run: |
+          APK=$(jq -r .apkPath build-info.json)
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | head -8
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-${{ inputs.build_id }}-files
+          retention-days: 90
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+            forge.jks
+            keystore-info.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: forge-${{ inputs.build_id }}
+          name: "$(jq -r .appName build-info.json) v$(jq -r .versionName build-info.json)"
+          body: |
+            Built with APK Forge Studio ⚒️
+            - Package: $(jq -r .packageId build-info.json)
+            - Version: $(jq -r .versionName build-info.json) ($(jq -r .versionCode build-info.json))
+
+            **Install:** download the APK below and open it on your Android phone.
+            **Play Store:** upload the AAB to the Play Console.
+
+            🔑 The release keystore is saved in this workflow run's **Artifacts** (login required) — download it and keep it safe. You need the same keystore to publish updates.
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
