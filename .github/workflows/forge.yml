@@ -12,11 +12,6 @@ on:
         description: "Build ID — the builds/<id> directory committed to the repo"
         required: true
         type: string
-  # TEMPORARY (e2e test only): allow triggering via push while the API token
-  # lacks Actions write permission. Removed after the test passes.
-  push:
-    branches: [main]
-    paths: ['builds/test-1790360527/**']
 
 permissions:
   contents: write   # needed to create the tag + GitHub Release
@@ -26,9 +21,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      # TEMPORARY (e2e test only): resolve the build id for push events.
       - name: Resolve build ID
-        run: echo "BUILD_ID=${{ inputs.build_id || 'test-1790360527' }}" >> $GITHUB_ENV
+        run: |
+          BID="${{ inputs.build_id }}"
+          test -n "$BID" || { echo "build_id input is required"; exit 1; }
+          echo "BUILD_ID=$BID" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -114,20 +111,33 @@ jobs:
             forge.jks
             keystore-info.txt
 
+      - name: Prepare release metadata
+        id: meta
+        run: |
+          {
+            echo "app_name=$(jq -r .appName build-info.json)"
+            echo "version_name=$(jq -r .versionName build-info.json)"
+            echo "version_code=$(jq -r .versionCode build-info.json)"
+            echo "package_id=$(jq -r .packageId build-info.json)"
+          } >> $GITHUB_OUTPUT
+          FILES="android/app/build/outputs/apk/release/app-release.apk"
+          if [ "$(jq -r .includeAab build-info.json)" = "true" ]; then
+            FILES="$FILES,android/app/build/outputs/bundle/release/app-release.aab"
+          fi
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: forge-${{ env.BUILD_ID }}
-          name: "$(jq -r .appName build-info.json) v$(jq -r .versionName build-info.json)"
+          name: "${{ steps.meta.outputs.app_name }} v${{ steps.meta.outputs.version_name }}"
           body: |
             Built with APK Forge Studio ⚒️
-            - Package: $(jq -r .packageId build-info.json)
-            - Version: $(jq -r .versionName build-info.json) ($(jq -r .versionCode build-info.json))
+            - Package: ${{ steps.meta.outputs.package_id }}
+            - Version: ${{ steps.meta.outputs.version_name }} (${{ steps.meta.outputs.version_code }})
 
             **Install:** download the APK below and open it on your Android phone.
             **Play Store:** upload the AAB to the Play Console.
 
             🔑 The release keystore is saved in this workflow run's **Artifacts** (login required) — download it and keep it safe. You need the same keystore to publish updates.
-          files: |
-            android/app/build/outputs/apk/release/app-release.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+          files: ${{ steps.meta.outputs.files }}
