@@ -1,0 +1,12 @@
+{
+  "appName": "Forge Test",
+  "packageId": "com.niteshkumar.forgetest",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "orientation": "portrait",
+  "splashColor": "#1a1033",
+  "themeColor": "#6c3df4",
+  "sourceType": "template",
+  "templateName": "current-affairs",
+  "includeAab": true
+}
