@@ -257,18 +257,26 @@ const fg = await sharp({
 }).composite([{ input: await sharp(iconSrc).resize(288, 288).png().toBuffer(), gravity: 'center' }]).png().toBuffer();
 writeFileSync(path.join(ANDROID, 'res', 'mipmap-xxxhdpi', 'ic_launcher_foreground.png'), fg);
 
-// colors.xml — launcher background + splash background
-const colorsPath = path.join(ANDROID, 'res', 'values', 'colors.xml');
-let colors = existsSync(colorsPath) ? read(colorsPath) : '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n</resources>\n';
-const upsertColor = (xml, name, value) => {
-  const re = new RegExp(`<color name="${name}">[^<]*</color>`);
+// colors: update wherever the name is already defined (the Capacitor template
+// ships ic_launcher_background in its own file), else append to colors.xml
+const valuesDir = path.join(ANDROID, 'res', 'values');
+const upsertColor = (name, value) => {
   const tag = `<color name="${name}">${value}</color>`;
-  if (re.test(xml)) return xml.replace(re, tag);
-  return xml.replace('</resources>', `    ${tag}\n</resources>`);
+  const re = new RegExp(`<color name="${name}">[^<]*</color>`);
+  for (const f of readdirSync(valuesDir)) {
+    if (!f.endsWith('.xml')) continue;
+    const p = path.join(valuesDir, f);
+    const xml = read(p);
+    if (re.test(xml)) { write(p, xml.replace(re, tag)); log(`updated color ${name} in ${f}`); return; }
+  }
+  const cp = path.join(valuesDir, 'colors.xml');
+  let cxml = existsSync(cp) ? read(cp) : '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n</resources>\n';
+  cxml = cxml.replace('</resources>', `    ${tag}\n</resources>`);
+  write(cp, cxml);
+  log(`added color ${name} to colors.xml`);
 };
-colors = upsertColor(colors, 'ic_launcher_background', themeHex);
-colors = upsertColor(colors, 'forge_splash_background', splashHex);
-write(colorsPath, colors);
+upsertColor('ic_launcher_background', themeHex);
+upsertColor('forge_splash_background', splashHex);
 
 const anydpi = path.join(ANDROID, 'res', 'mipmap-anydpi-v26');
 mkdirSync(anydpi, { recursive: true });
@@ -366,7 +374,11 @@ const rand = (n) => {
   for (const x of b) s += chars[x % chars.length];
   return s;
 };
-const storePass = rand(24), keyPass = rand(24), keyAlias = 'forge';
+const storePass = rand(24), keyAlias = 'forge';
+// NOTE: PKCS12 keystores (keytool's default) do not support a key password
+// different from the store password — keytool silently ignores -keypass.
+// So we use ONE password for both and record it as such.
+const keyPass = storePass;
 const ksPath = path.join(ROOT, 'forge.jks');
 if (existsSync(ksPath)) rmSync(ksPath);
 run(`keytool -genkeypair -keystore "${ksPath}" -alias ${keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass "${storePass}" -keypass "${keyPass}" -dname "CN=APK Forge Studio"`);
