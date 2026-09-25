@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0714">
+<meta name="description" content="APK Forge Studio — turn any web app or website into a real, signed Android APK. Free, right from your browser.">
+<title>APK Forge Studio — Web to APK, free</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="grain"></div>
+</div>
+
+<header class="nav">
+  <a class="brand" href="#top">
+    <span class="brand-mark">⚒️</span>
+    <span class="brand-name">APK <em>Forge</em> Studio</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#studio">Studio</a>
+    <a href="#history">Builds</a>
+    <a href="#guide">Guide</a>
+  </nav>
+  <div class="nav-actions">
+    <button id="connectBtn" class="btn btn-ghost">🔑 Connect GitHub</button>
+    <a class="btn btn-ghost only-desktop" href="https://github.com/maticcretic-commits/apk-forge" target="_blank" rel="noopener">★ Repo</a>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge reveal">⚒️ Free forever · No build machine needed</div>
+    <h1 class="reveal d1">Turn any website into a <span class="grad">real Android APK</span></h1>
+    <p class="reveal d2">Upload your web app, paste a website URL, or start from a template — APK Forge builds a <strong>signed, installable APK</strong> in the cloud and hands you the download link. Zero setup, zero cost.</p>
+    <div class="hero-cta reveal d3">
+      <a href="#studio" class="btn btn-primary btn-lg">🔥 Start forging</a>
+      <a href="#guide" class="btn btn-ghost btn-lg">How it works</a>
+    </div>
+    <div class="hero-stats reveal d4">
+      <div class="stat"><b>100%</b><span>free</span></div>
+      <div class="stat"><b>~10 min</b><span>per build</span></div>
+      <div class="stat"><b>Signed</b><span>release APK</span></div>
+      <div class="stat"><b>+AAB</b><span>Play Store ready</span></div>
+    </div>
+  </section>
+
+  <!-- STUDIO -->
+  <section id="studio" class="section">
+    <div class="section-head reveal">
+      <h2>The Studio</h2>
+      <p>Four steps. Then the cloud does the heavy lifting.</p>
+    </div>
+
+    <div class="studio-grid">
+      <div class="wizard card">
+        <ol class="steps" id="stepsBar">
+          <li class="active" data-step="1"><span class="n">1</span><span class="lbl">Source</span></li>
+          <li data-step="2"><span class="n">2</span><span class="lbl">Branding</span></li>
+          <li data-step="3"><span class="n">3</span><span class="lbl">Options</span></li>
+          <li data-step="4"><span class="n">4</span><span class="lbl">Forge</span></li>
+        </ol>
+
+        <!-- STEP 1: SOURCE -->
+        <div class="step active" data-step="1">
+          <h3>Where's your app?</h3>
+          <div class="source-cards">
+            <button class="source-card selected" data-source="template">
+              <span class="sc-emoji">🎨</span><b>Template</b><span>Start from a ready-made app</span>
+            </button>
+            <button class="source-card" data-source="zip">
+              <span class="sc-emoji">📦</span><b>Upload ZIP</b><span>Your HTML/CSS/JS web app</span>
+            </button>
+            <button class="source-card" data-source="url">
+              <span class="sc-emoji">🌐</span><b>Website URL</b><span>Wrap any site in an app</span>
+            </button>
+          </div>
+
+          <div class="source-detail" id="detail-template">
+            <div class="tpl-grid">
+              <button class="tpl-card selected" data-template="starter">
+                <span class="tpl-emoji">✨</span>
+                <b>Starter</b><span>A clean gradient hello-world app with a tap counter. Perfect for testing.</span>
+              </button>
+              <button class="tpl-card" data-template="current-affairs">
+                <img class="tpl-icon" src="https://cdn.jsdelivr.net/gh/maticcretic-commits/apk-forge@main/templates/current-affairs/icon.png" alt="BPSC Current Affairs icon" loading="lazy">
+                <b>BPSC Current Affairs</b><span>The full current-affairs study app — 699 capsules, quizzes &amp; read-aloud.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="source-detail hidden" id="detail-zip">
+            <label class="dropzone" id="zipDrop">
+              <input type="file" id="zipInput" accept=".zip" hidden>
+              <span class="dz-emoji">📦</span>
+              <b id="zipLabel">Drop your .zip here or tap to browse</b>
+              <span class="dz-hint">Must contain an <code>index.html</code> at its root</span>
+            </label>
+          </div>
+
+          <div class="source-detail hidden" id="detail-url">
+            <label class="field">
+              <span>Website URL</span>
+              <input type="url" id="siteUrl" placeholder="https://example.com" inputmode="url" autocomplete="url">
+            </label>
+            <p class="hint">The app opens your site full-screen. If the phone is offline, users see a friendly retry screen.</p>
+          </div>
+
+          <div class="wizard-nav">
+            <span></span>
+            <button class="btn btn-primary" data-next>Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: BRANDING -->
+        <div class="step" data-step="2">
+          <h3>Make it yours</h3>
+          <div class="form-grid">
+            <label class="field"><span>App name</span>
+              <input type="text" id="appName" value="My Forge App" maxlength="40">
+            </label>
+            <label class="field"><span>Package ID</span>
+              <input type="text" id="packageId" value="com.example.myforgeapp" inputmode="latin" autocomplete="off" spellcheck="false">
+              <em class="field-msg" id="packageMsg">lowercase · e.g. com.yourname.appname</em>
+            </label>
+            <label class="field"><span>Version name</span>
+              <input type="text" id="versionName" value="1.0.0">
+            </label>
+            <label class="field"><span>Version code</span>
+              <input type="number" id="versionCode" value="1" min="1" step="1">
+            </label>
+          </div>
+
+          <div class="icon-row">
+            <label class="icon-upload" id="iconDrop">
+              <input type="file" id="iconInput" accept="image/png,image/jpeg" hidden>
+              <img id="iconPreview" alt="App icon preview">
+              <span class="iu-overlay">🖼️<b>Upload icon</b><small>PNG/JPG · square works best</small></span>
+            </label>
+            <div class="homescreen" aria-hidden="true">
+              <div class="hs-wallpaper"></div>
+              <div class="hs-status">9:41</div>
+              <div class="hs-apps">
+                <div class="hs-app"><img id="hsIcon" alt=""><small id="hsName">My Forge App</small></div>
+                <div class="hs-app ghost"><span>📷</span></div>
+                <div class="hs-app ghost"><span>💬</span></div>
+                <div class="hs-app ghost"><span>🎵</span></div>
+              </div>
+              <div class="hs-dock"><span>📞</span><span>🌐</span><span>✉️</span><span>⚙️</span></div>
+            </div>
+          </div>
+          <p class="hint">No icon? Forge auto-generates a stylish one from your app name.</p>
+
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" data-back>← Back</button>
+            <button class="btn btn-primary" data-next>Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: OPTIONS -->
+        <div class="step" data-step="3">
+          <h3>Polish the details</h3>
+          <div class="opt-block">
+            <span class="opt-label">Screen orientation</span>
+            <div class="segmented" id="orientationSeg">
+              <button class="selected" data-value="portrait">📱 Portrait</button>
+              <button data-value="landscape">📺 Landscape</button>
+              <button data-value="unspecified">🔄 Auto</button>
+            </div>
+          </div>
+          <div class="opt-grid">
+            <label class="field"><span>Splash background</span>
+              <span class="color-wrap"><input type="color" id="splashColor" value="#1a1033"><code id="splashHex">#1a1033</code></span>
+            </label>
+            <label class="field"><span>Theme / status-bar color</span>
+              <span class="color-wrap"><input type="color" id="themeColor" value="#6c3df4"><code id="themeHex">#6c3df4</code></span>
+            </label>
+          </div>
+          <label class="toggle-row">
+            <span class="toggle-text"><b>Also build an AAB</b><small>Needed for Google Play Store uploads</small></span>
+            <span class="switch"><input type="checkbox" id="includeAab" checked><i></i></span>
+          </label>
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" data-back>← Back</button>
+            <button class="btn btn-primary" data-next>Review →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: REVIEW & FORGE -->
+        <div class="step" data-step="4">
+          <h3>Ready to forge?</h3>
+          <dl class="review-list" id="reviewList"></dl>
+          <div class="notice">
+            <b>🔑 About signing:</b> every build gets a fresh release keystore. After the build,
+            download it from the run's <b>Artifacts</b> and keep it safe — you need the <i>same</i> keystore to publish app updates.
+          </div>
+          <div id="forgeError" class="error-box hidden"></div>
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" data-back>← Back</button>
+            <button class="btn btn-forge btn-lg" id="forgeBtn">⚒️ FORGE MY APK</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHONE PREVIEW -->
+      <aside class="preview-col">
+        <div class="phone-wrap reveal">
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <iframe id="previewFrame" title="App preview" sandbox="allow-scripts allow-same-origin"></iframe>
+              <div class="preview-loading" id="previewLoading"><div class="spin"></div></div>
+            </div>
+          </div>
+          <p class="preview-caption" id="previewCaption">Live preview</p>
+          <p class="preview-note hidden" id="previewNote">⚠️ This site blocks embedding, so the preview is blank — the APK will still load it full-screen.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- BUILD PROGRESS -->
+  <section id="progress" class="section hidden">
+    <div class="section-head">
+      <h2>Forging your app…</h2>
+      <p id="progressSub">Build <code id="progressBuildId"></code> is running in the cloud.</p>
+    </div>
+    <div class="card timeline-card">
+      <ol class="timeline" id="timeline">
+        <li data-stage="queued"><span class="t-dot"></span><div><b>Queued</b><small>Waiting for a cloud runner</small></div></li>
+        <li data-stage="preparing"><span class="t-dot"></span><div><b>Preparing</b><small>Setting up SDK &amp; scaffolding your app</small></div></li>
+        <li data-stage="building"><span class="t-dot"></span><div><b>Building app</b><small>Compiling with Gradle (~5–10 min)</small></div></li>
+        <li data-stage="signing"><span class="t-dot"></span><div><b>Signing</b><small>Aligning &amp; signing your release</small></div></li>
+        <li data-stage="publishing"><span class="t-dot"></span><div><b>Publishing</b><small>Creating your download release</small></div></li>
+      </ol>
+      <div class="progress-actions">
+        <a id="runLink" class="btn btn-ghost" href="#" target="_blank" rel="noopener">📜 View live logs</a>
+        <button id="cancelWatch" class="btn btn-ghost">Stop watching</button>
+      </div>
+      <p class="hint">You can close this page — the build keeps running. Find it later under <a href="#history">Builds</a>.</p>
+    </div>
+  </section>
+
+  <!-- SUCCESS -->
+  <section id="success" class="section hidden">
+    <div class="card success-card">
+      <div class="success-emoji">🎉</div>
+      <h2>Your APK is ready!</h2>
+      <p id="successName"></p>
+      <div class="dl-buttons" id="dlButtons"></div>
+      <div class="notice">
+        <b>🔑 Don't forget:</b> download your keystore from the run's <b>Artifacts</b>
+        (<a id="keystoreRunLink" href="#" target="_blank" rel="noopener">open the build run</a>) and store it somewhere safe.
+        Updates to this app must be signed with the same keystore.
+      </div>
+      <button class="btn btn-primary" id="forgeAnother">⚒️ Forge another</button>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="history" class="section">
+    <div class="section-head reveal">
+      <h2>Build history</h2>
+      <p>Every successful forge lands here as a public download.</p>
+    </div>
+    <div id="historyList" class="history-list"><p class="hint">Loading builds…</p></div>
+  </section>
+
+  <!-- GUIDE -->
+  <section id="guide" class="section">
+    <div class="section-head reveal">
+      <h2>How it works</h2>
+      <p>No build machine, no Android Studio, no terminal.</p>
+    </div>
+    <div class="guide-grid">
+      <div class="card guide-card reveal"><span class="g-num">1</span><h3>Design in the studio</h3><p>Pick a source, brand your app, set options — all in this page, with a live phone preview.</p></div>
+      <div class="card guide-card reveal d1"><span class="g-num">2</span><h3>Connect GitHub</h3><p>One click, one token. Your build recipe is saved to the repo and the cloud takes over.</p></div>
+      <div class="card guide-card reveal d2"><span class="g-num">3</span><h3>Cloud builds it</h3><p>GitHub Actions scaffolds a real Android project, compiles it with Gradle, signs the release.</p></div>
+      <div class="card guide-card reveal d3"><span class="g-num">4</span><h3>Download &amp; install</h3><p>Grab the APK from your build history and install it straight onto your phone.</p></div>
+    </div>
+
+    <div class="card token-guide reveal">
+      <h3>🔑 Getting your GitHub token <span class="pill">one-time setup</span></h3>
+      <ol>
+        <li>Open <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> → <b>Generate new token (classic)</b>.</li>
+        <li>Tick the <code>repo</code> and <code>workflow</code> scopes.</li>
+        <li>Copy the token and paste it in the <b>Connect GitHub</b> dialog.</li>
+      </ol>
+      <p class="hint">Your token is stored <b>only in this browser</b> (localStorage) and is sent <b>only to api.github.com</b> — never anywhere else.</p>
+    </div>
+
+    <div class="card arch reveal">
+      <h3>Architecture</h3>
+      <p class="arch-flow">📱 This page → 📦 Your repo (<code>builds/&lt;id&gt;</code>) → ☁️ GitHub Actions (Gradle build + sign) → 🎉 Public release (APK download)</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>⚒️ <b>APK Forge Studio</b> — free forever. Built for makers who ship from their phones.</p>
+  <p><a href="https://github.com/maticcretic-commits/apk-forge" target="_blank" rel="noopener">GitHub repo</a> · Report issues there.</p>
+</footer>
+
+<!-- CONNECT MODAL -->
+<div class="modal-backdrop hidden" id="connectModal">
+  <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+    <h3 id="cmTitle">🔑 Connect GitHub</h3>
+    <p class="hint">The studio saves your build recipe to the repo and triggers the cloud build through the GitHub API.</p>
+    <label class="field"><span>Owner</span><input type="text" id="ghOwner" value="maticcretic-commits" autocomplete="off" spellcheck="false"></label>
+    <label class="field"><span>Repository</span><input type="text" id="ghRepo" value="apk-forge" autocomplete="off" spellcheck="false"></label>
+    <label class="field"><span>Branch</span><input type="text" id="ghBranch" value="main" autocomplete="off" spellcheck="false"></label>
+    <label class="field"><span>Personal access token (classic)</span>
+      <input type="password" id="ghToken" placeholder="ghp_…" autocomplete="off" spellcheck="false">
+      <em class="field-msg">Needs <code>repo</code> + <code>workflow</code> scopes. Stored only in this browser.</em>
+    </label>
+    <div id="connectTest" class="error-box hidden"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="connectCancel">Cancel</button>
+      <button class="btn btn-primary" id="connectSave">Test &amp; save</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
